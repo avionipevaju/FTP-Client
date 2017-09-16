@@ -48,6 +48,13 @@ public class AppCore {
 				break;
 			}
 		}
+		
+		if(username == null)
+			username = "user";
+		if(password == null)
+			password = "pass";
+		if(server == null)
+			server = "127.0.0.1";
 
 		FTP protocol = new FTP(username, password, server, files);
 		System.out.println(protocol);
