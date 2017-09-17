@@ -3,13 +3,11 @@ package com.centili.ftp.appcore;
  * 
  */
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import com.centili.ftp.datatransfer.DataTransfer;
 
 /**
  * @author antic
@@ -55,12 +53,23 @@ public class AppCore {
 			password = "pass";
 		if(server == null)
 			server = "127.0.0.1";
-
-		FTP protocol = new FTP(username, password, server, files);
-		System.out.println(protocol);
+		
+		String[] paths = files.split(";");
 		try {
-			protocol.connect();
-			protocol.login();
+			
+			ExecutorService executorService = Executors.newFixedThreadPool(paths.length);
+			for (String path : paths) {
+				FTP protocol = new FTP(username, password, server, files);
+				protocol.connect();
+				protocol.login();
+				DataTransfer trans = new DataTransfer(protocol, path);
+				executorService.execute(trans);
+
+			}
+			
+			executorService.shutdown();
+			
+						
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
