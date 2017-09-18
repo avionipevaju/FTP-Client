@@ -57,6 +57,10 @@ public class AppCore {
 			server = "127.0.0.1";
 
 		String[] paths = files.split(";");
+		if(paths.length > 5){
+			System.out.println("Cant upload more than 5 files simoultaneously.");
+			System.exit(1);
+		}
 		ArrayList<FTP> connections = new ArrayList<>();
 		System.out.println("\nList of files to transfer: ");
 		System.out.println("--------------------------------------");
