@@ -57,26 +57,34 @@ public class AppCore {
 
 		String[] paths = files.split(";");
 		ArrayList<FTP> connections = new ArrayList<>();
+		System.out.println("\nList of files to transfer: ");
+		System.out.println("--------------------------------------");
 		try {
-
+			int counter = 1;
 			ExecutorService executorService = Executors.newFixedThreadPool(paths.length);
 			for (String path : paths) {
 				FTP protocol = new FTP(username, password, server, path);
 				connections.add(protocol);
 				protocol.connect();
 				protocol.login();
+				System.out.println(counter + ". " + protocol.getFile().getName() + " "
+						+ protocol.getFile().length() / 1024 + " Kb");
+				counter++;
 				DataTransfer trans = new DataTransfer(protocol);
 				executorService.execute(trans);
 			}
+		System.out.println("--------------------------------------");
+		System.out.println("Live upload stats:");
 
 			while (true) {
 				try {
 					Thread.sleep(100);
-					int counter = 0;
+					counter = 0;
 					for (FTP ftp : connections) {
-						if(ftp.getPercentage() == 100)
+						if (ftp.getPercentage() == 100)
 							counter++;
-						System.out.printf("%s %.2f%% %.2fs %.2fKb/s | ", ftp.getFile().getName(), ftp.getPercentage(), ftp.getElapsedTime()/1000, ftp.getTransferRate());
+						System.out.printf("%s %.2f%% %.2fs %.2fKb/s | ", ftp.getFile().getName(), ftp.getPercentage(),
+								ftp.getElapsedTime() / 1000, ftp.getTransferRate());
 					}
 					System.out.printf("\r");
 					if (counter == connections.size()) {
@@ -89,6 +97,8 @@ public class AppCore {
 			}
 
 			executorService.shutdown();
+			
+			System.out.println("\nCumulative upload stats: ");
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

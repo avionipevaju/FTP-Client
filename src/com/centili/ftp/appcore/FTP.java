@@ -65,8 +65,6 @@ public class FTP {
 
 		mResponse = mReader.readLine();
 		check("220");
-		System.out.println(mResponse);
-		System.out.println("---CONNECTED---");
 		return true;
 	}
 
@@ -82,9 +80,6 @@ public class FTP {
 			sendLine(mRequest);
 			mResponse = mReader.readLine();
 			check("230");
-			System.out.println(mResponse);
-
-			System.out.println("---LOGED IN---");
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -121,16 +116,29 @@ public class FTP {
 			byte[] buffer = new byte[4096];
 			int bytesRead = 0;
 			int loaded = 0;
+			double bytesInOneSecond = 0;
+			double oneSecond = 0;
 			while ((bytesRead = input.read(buffer)) != -1) {
 				double start = System.nanoTime();
 				loaded += bytesRead;
+				bytesInOneSecond += bytesRead;
 				output.write(buffer, 0, bytesRead);
-				mPercentage = ((float)loaded/mFile.length()*100);
+				mPercentage = ((float) loaded / mFile.length() * 100);
 				double end = System.nanoTime();
-				mElapsedTime+=(end-start)/1000000;
-				mTransferRate=((double)loaded/1024)/(mElapsedTime/1000);
-				
+				mElapsedTime += (end - start) / 1000000;
+				oneSecond += (end - start) / 1000000;
+				if (oneSecond>= 1000) {
+					mTransferRate = bytesInOneSecond / 1024;
+					bytesInOneSecond = 0;
+					oneSecond=0;
+				}
+				// mTransferRate = ((double) loaded / 1024) / (mElapsedTime /
+				// 1000);
+
 			}
+			
+			mTransferRate = (double)mFile.length()/mElapsedTime;
+			
 			output.flush();
 			output.close();
 			input.close();
@@ -191,11 +199,5 @@ public class FTP {
 	public double getTransferRate() {
 		return mTransferRate;
 	}
-	
-	
-	
-	
-	
-	
 
 }
