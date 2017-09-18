@@ -12,18 +12,14 @@ import com.centili.ftp.appcore.FTP;
 public class DataTransfer implements Runnable {
 	
 	private FTP mClient;
-	private String mFilePath;
 
-	public DataTransfer(FTP client, String filePath) {
+	public DataTransfer(FTP client) {
 		mClient = client;
-		mFilePath = filePath;
 	}
 
 	@Override
 	public void run() {
-		System.out.println("STARTED " + mFilePath);
-		mClient.uploadFile(mFilePath);
-		System.out.println("END " +mFilePath);
+		mClient.uploadFile();
 		
 	}
 

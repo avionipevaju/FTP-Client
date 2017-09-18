@@ -22,18 +22,23 @@ import java.net.Socket;
  */
 public class FTP {
 
-	private String mUsername, mPassword, mServerIP, mFiles;
+	private String mUsername, mPassword, mServerIP, mFilePath;
 	private String mRequest, mResponse;
 	private Socket mSocket;
 	private BufferedReader mReader;
 	private BufferedWriter mWriter;
+	private float mPercentage = 0;
+	private File mFile;
+	private double mElapsedTime = 0;
+	private double mTransferRate = 0;
 
-	public FTP(String mUsername, String mPassword, String mServerIP, String mFiles) {
+	public FTP(String mUsername, String mPassword, String mServerIP, String mFilePath) {
 		super();
 		this.mUsername = mUsername;
 		this.mPassword = mPassword;
 		this.mServerIP = mServerIP;
-		this.mFiles = mFiles;
+		this.mFilePath = mFilePath;
+		mFile = new File(mFilePath);
 	}
 
 	private void sendLine(String request) {
@@ -89,15 +94,13 @@ public class FTP {
 		return true;
 	}
 
-	public boolean uploadFile(String filePath) {
+	public boolean uploadFile() {
 		try {
-			File file = new File(filePath);
-			BufferedInputStream input = new BufferedInputStream(new FileInputStream(file));
+			BufferedInputStream input = new BufferedInputStream(new FileInputStream(mFile));
 			mRequest = "PASV";
 			sendLine(mRequest);
 			mResponse = mReader.readLine();
 			check("227");
-			// System.out.println(mResponse);
 
 			int beg = mResponse.indexOf("(");
 			String s = mResponse.substring(beg + 1, mResponse.length() - 2);
@@ -107,7 +110,7 @@ public class FTP {
 			String ip = tok[0] + "." + tok[1] + "." + tok[2] + "." + tok[3];
 			int port = Integer.parseInt(tok[4]) * 256 + Integer.parseInt(tok[5]);
 
-			mRequest = "STOR " + file.getName();
+			mRequest = "STOR " + mFile.getName();
 			sendLine(mRequest);
 			mResponse = mReader.readLine();
 			check("150");
@@ -117,24 +120,23 @@ public class FTP {
 			BufferedOutputStream output = new BufferedOutputStream(dataSocket.getOutputStream());
 			byte[] buffer = new byte[4096];
 			int bytesRead = 0;
-			System.out.println("Transfering file " + file.getName());
-			float i = 0;
 			int loaded = 0;
 			while ((bytesRead = input.read(buffer)) != -1) {
+				double start = System.nanoTime();
 				loaded += bytesRead;
 				output.write(buffer, 0, bytesRead);
-				i = ((float)loaded/file.length()*100);
-				System.out.printf(file.getName() + " %.2f %% \r",i);
+				mPercentage = ((float)loaded/mFile.length()*100);
+				double end = System.nanoTime();
+				mElapsedTime+=(end-start)/1000000;
+				mTransferRate=((double)loaded/1024)/(mElapsedTime/1000);
 				
 			}
-			System.out.printf(file.getName() + " %.2f %% %n",i);
 			output.flush();
 			output.close();
 			input.close();
 			dataSocket.close();
 
 			mResponse = mReader.readLine();
-			// System.out.println(mResponse);
 			return mResponse.startsWith("226 ");
 
 		} catch (IOException e) {
@@ -152,7 +154,48 @@ public class FTP {
 	@Override
 	public String toString() {
 		return "FTP [mUsername=" + mUsername + ", mPassword=" + mPassword + ", mServerIP=" + mServerIP + ", mFiles="
-				+ mFiles + "]";
+				+ mFilePath + "]";
 	}
+
+	/**
+	 * @return the mPercentage
+	 */
+	public float getPercentage() {
+		return mPercentage;
+	}
+
+	/**
+	 * @return the mFile
+	 */
+	public File getFile() {
+		return mFile;
+	}
+
+	/**
+	 * @return the mFilePath
+	 */
+	public String getFilePath() {
+		return mFilePath;
+	}
+
+	/**
+	 * @return the mElapsedTime
+	 */
+	public double getElapsedTime() {
+		return mElapsedTime;
+	}
+
+	/**
+	 * @return the mTransferRate
+	 */
+	public double getTransferRate() {
+		return mTransferRate;
+	}
+	
+	
+	
+	
+	
+	
 
 }
