@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.centili.ftp.appcore;
+package com.centili.ftp.models;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

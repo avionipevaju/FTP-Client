@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.centili.ftp.datatransfer.DataTransfer;
+import com.centili.ftp.models.FTP;
 
 /**
  * @author antic

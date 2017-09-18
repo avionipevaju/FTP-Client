@@ -3,7 +3,7 @@
  */
 package com.centili.ftp.datatransfer;
 
-import com.centili.ftp.appcore.FTP;
+import com.centili.ftp.models.FTP;
 
 /**
  * @author antic
