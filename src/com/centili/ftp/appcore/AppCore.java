@@ -73,8 +73,8 @@ public class AppCore {
 				DataTransfer trans = new DataTransfer(protocol);
 				executorService.execute(trans);
 			}
-		System.out.println("--------------------------------------");
-		System.out.println("Live upload stats:");
+			System.out.println("--------------------------------------");
+			System.out.println("Live upload stats:");
 
 			while (true) {
 				try {
@@ -83,7 +83,7 @@ public class AppCore {
 					for (FTP ftp : connections) {
 						if (ftp.getPercentage() == 100)
 							counter++;
-						System.out.printf("%s %.2f%% %.2fs %.2fKb/s | ", ftp.getFile().getName(), ftp.getPercentage(),
+						System.out.printf("%s %.2f%% %.2f s %.2f Kb/s | ", ftp.getFile().getName(), ftp.getPercentage(),
 								ftp.getElapsedTime() / 1000, ftp.getTransferRate());
 					}
 					System.out.printf("\r");
@@ -97,8 +97,22 @@ public class AppCore {
 			}
 
 			executorService.shutdown();
-			
-			System.out.println("\nCumulative upload stats: ");
+
+			double totalTimeOfUpload = 0;
+			double averageTransferRate = 0;
+
+			for (FTP ftp : connections) {
+				totalTimeOfUpload += ftp.getElapsedTime();
+				averageTransferRate += ftp.getFile().length()/1024;
+			}
+
+			totalTimeOfUpload /= 1000;
+			averageTransferRate = averageTransferRate / totalTimeOfUpload;
+
+			System.out.println("\n--------------------------------------");
+			System.out.println("Cumulative upload stats: ");
+			System.out.printf("Total time of upload: %.2f s \n", totalTimeOfUpload);
+			System.out.printf("Average transfer rate: %.2f Kb/s \n", averageTransferRate);
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

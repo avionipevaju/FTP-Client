@@ -132,8 +132,7 @@ public class FTP {
 					bytesInOneSecond = 0;
 					oneSecond=0;
 				}
-				// mTransferRate = ((double) loaded / 1024) / (mElapsedTime /
-				// 1000);
+				
 
 			}
 			
