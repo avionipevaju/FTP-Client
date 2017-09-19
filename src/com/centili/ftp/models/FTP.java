@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 /**
  * Simple File Transfer Protocol client implementation based on RFC 959.
@@ -58,6 +59,11 @@ public class FTP {
 
 	}
 
+	/**
+	 * Creates a BufferedInputStream
+	 * 
+	 * @return 
+	 */
 	private boolean loadFile() {
 		try {
 			mInput = new BufferedInputStream(new FileInputStream(mFile));
@@ -101,23 +107,25 @@ public class FTP {
 	/**
 	 * Connects to the FTP server on port 21
 	 * 
-	 * @return
-	 * @throws IOException
+	 * @return <code>true</code> if connection to the server is successful. <code>false</code> otherwise
 	 */
-	public boolean connect() throws IOException {
-		mSocket = new Socket(mServerIP, 21);
-		mReader = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
-		mWriter = new BufferedWriter(new OutputStreamWriter(mSocket.getOutputStream()));
-
-		mResponse = mReader.readLine();
-		check("220");
+	public boolean connect() {
+		try {
+			mSocket = new Socket(mServerIP, 21);
+			mReader = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
+			mWriter = new BufferedWriter(new OutputStreamWriter(mSocket.getOutputStream()));
+			mResponse = mReader.readLine();
+			check("220");
+		} catch (IOException e) {
+			return false;
+		}
 		return true;
 	}
 
 	/**
 	 * Logs in the user to the FTP server
 	 * 
-	 * @return
+	 * @return <code>true</code> if authentication is successful. <code>false</code> otherwise
 	 */
 	public boolean login() {
 		try {
@@ -133,7 +141,6 @@ public class FTP {
 			check("230");
 
 		} catch (IOException e) {
-			e.printStackTrace();
 			return false;
 		}
 
@@ -143,7 +150,7 @@ public class FTP {
 	/**
 	 * Uploads the file to the FTP server in passive mode
 	 * 
-	 * @return
+	 * @return <code>true</code> if a file is uploaded correctly. <code>false</code> otherwise
 	 */
 	public boolean uploadFile() {
 		try {
@@ -204,10 +211,10 @@ public class FTP {
 			return mResponse.startsWith("226 ");
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			return false;
 
 		}
-		return false;
+
 	}
 
 	/*
