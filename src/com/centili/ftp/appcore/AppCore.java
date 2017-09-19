@@ -1,9 +1,8 @@
-package com.centili.ftp.appcore;
 /**
  * 
  */
+package com.centili.ftp.appcore;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,7 +13,7 @@ import com.centili.ftp.models.FTP;
 /**
  * Main class for FTP file upload
  * 
- * @author antic
+ * @author Antic Nikola
  *
  */
 public class AppCore {
@@ -23,7 +22,8 @@ public class AppCore {
 	 * Parses the command line arguments and starts the parallel file upload up
 	 * to 5 files at a time to the server
 	 * 
-	 * @param args command line arguments
+	 * @param args
+	 *            command line arguments
 	 */
 	public static void main(String[] args) {
 
@@ -49,7 +49,7 @@ public class AppCore {
 				break;
 			case "-files":
 				i++;
-				if(i < args.length)
+				if (i < args.length)
 					files = args[i];
 				break;
 			}
@@ -61,7 +61,7 @@ public class AppCore {
 			password = "pass";
 		if (server == null)
 			server = "127.0.0.1";
-		if (files == null){
+		if (files == null) {
 			System.err.println("No files to upload");
 			System.exit(1);
 		}
@@ -77,23 +77,28 @@ public class AppCore {
 		for (String path : paths) {
 			FTP protocol = new FTP(username, password, server, path);
 			connections.add(protocol);
-			if(!protocol.connect())
-				System.out.println("Error connecting to the Server");
-			if(!protocol.login())
-				System.out.println("Error when logging in");
+			if (!protocol.connect()) {
+				System.out.println("Error connecting to server at: " + server);
+				System.exit(1);
+			}
+			if (!protocol.login()) {
+				System.out.println(
+						"Error when logging in wit credentials username: " + username + " password: " + password);
+				System.exit(1);
+			}
 			DataTransfer trans = new DataTransfer(protocol);
 			executorService.execute(trans);
 		}
 
 		System.out.println("\nList of files to transfer: ");
 		System.out.println("--------------------------------------");
-		
+
 		for (FTP protocol : connections) {
-			System.out.println(counter + ". " + protocol.getFile().getName() + " "
-					+ protocol.getFile().length() / 1024 + " Kb");
+			System.out.println(
+					counter + ". " + protocol.getFile().getName() + " " + protocol.getFile().length() / 1024 + " Kb");
 			counter++;
 		}
-		
+
 		System.out.println("--------------------------------------");
 		System.out.println("Live upload stats:");
 

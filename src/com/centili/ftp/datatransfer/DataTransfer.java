@@ -8,7 +8,7 @@ import com.centili.ftp.models.FTP;
 /**
  * Represents a thread that uploads a file
  * 
- * @author antic
+ * @author Antic Nikola
  *
  */
 public class DataTransfer implements Runnable {
