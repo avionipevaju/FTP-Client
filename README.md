@@ -31,3 +31,5 @@ Running an example with some parameters
 ```
 java -jar FTPClient.jar -server 192.168.10.1 -files data1.img;data2.img;music.mp3;mov.mp4
 ```
+![alt text](https://github.com/avionipevaju/FTP-Client/blob/master/examples/example.png?raw=true "Logo Title Text 1")
+
