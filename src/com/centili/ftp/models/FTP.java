@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -27,11 +28,25 @@ public class FTP {
 	private Socket mSocket;
 	private BufferedReader mReader;
 	private BufferedWriter mWriter;
+	private BufferedInputStream mInput;
 	private float mPercentage = 0;
 	private File mFile;
 	private double mElapsedTime = 0;
 	private double mTransferRate = 0;
+	private boolean mIsLoaded;
 
+	/**
+	 * Instantiates a FTP client.
+	 * 
+	 * @param mUsername
+	 *            username for authentication
+	 * @param mPassword
+	 *            password for authentication
+	 * @param mServerIP
+	 *            server to connect to
+	 * @param mFilePath
+	 *            file to be uploaded to the server
+	 */
 	public FTP(String mUsername, String mPassword, String mServerIP, String mFilePath) {
 		super();
 		this.mUsername = mUsername;
@@ -39,8 +54,27 @@ public class FTP {
 		this.mServerIP = mServerIP;
 		this.mFilePath = mFilePath;
 		mFile = new File(mFilePath);
+		mIsLoaded = loadFile();
+
 	}
 
+	private boolean loadFile() {
+		try {
+			mInput = new BufferedInputStream(new FileInputStream(mFile));
+			return true;
+		} catch (FileNotFoundException e) {
+			System.out.println("File " + mFile.getName() + " doesnt exist");
+			mPercentage = 100;
+			return false;
+		}
+	}
+
+	/**
+	 * Sends the command to the FTP server
+	 * 
+	 * @param request
+	 *            the command to send
+	 */
 	private void sendLine(String request) {
 		try {
 			mWriter.write(request + "\r\n");
@@ -51,6 +85,12 @@ public class FTP {
 
 	}
 
+	/**
+	 * Checks if the correct response is sent from the server
+	 * 
+	 * @param errorCode
+	 *            the expected code to return
+	 */
 	private void check(String errorCode) {
 		if (!mResponse.startsWith(errorCode + " ")) {
 			System.err.println("Unknown Response " + mResponse);
@@ -58,6 +98,12 @@ public class FTP {
 		}
 	}
 
+	/**
+	 * Connects to the FTP server on port 21
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
 	public boolean connect() throws IOException {
 		mSocket = new Socket(mServerIP, 21);
 		mReader = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
@@ -68,6 +114,11 @@ public class FTP {
 		return true;
 	}
 
+	/**
+	 * Logs in the user to the FTP server
+	 * 
+	 * @return
+	 */
 	public boolean login() {
 		try {
 
@@ -89,9 +140,16 @@ public class FTP {
 		return true;
 	}
 
+	/**
+	 * Uploads the file to the FTP server in passive mode
+	 * 
+	 * @return
+	 */
 	public boolean uploadFile() {
 		try {
-			BufferedInputStream input = new BufferedInputStream(new FileInputStream(mFile));
+			if (mIsLoaded == false)
+				return false;
+			
 			mRequest = "PASV";
 			sendLine(mRequest);
 			mResponse = mReader.readLine();
@@ -118,7 +176,7 @@ public class FTP {
 			int loaded = 0;
 			double bytesInOneSecond = 0;
 			double oneSecond = 0;
-			while ((bytesRead = input.read(buffer)) != -1) {
+			while ((bytesRead = mInput.read(buffer)) != -1) {
 				double start = System.nanoTime();
 				loaded += bytesRead;
 				bytesInOneSecond += bytesRead;
@@ -127,28 +185,27 @@ public class FTP {
 				double end = System.nanoTime();
 				mElapsedTime += (end - start) / 1000000;
 				oneSecond += (end - start) / 1000000;
-				if (oneSecond>= 1000) {
+				if (oneSecond >= 1000) {
 					mTransferRate = bytesInOneSecond / 1024;
 					bytesInOneSecond = 0;
-					oneSecond=0;
+					oneSecond = 0;
 				}
-				
 
 			}
-			
-			mTransferRate = (double)mFile.length()/mElapsedTime;
-			
+
+			mTransferRate = (double) mFile.length() / mElapsedTime;
+
 			output.flush();
 			output.close();
-			input.close();
+			mInput.close();
 			dataSocket.close();
 
 			mResponse = mReader.readLine();
 			return mResponse.startsWith("226 ");
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+
 		}
 		return false;
 	}
@@ -165,6 +222,8 @@ public class FTP {
 	}
 
 	/**
+	 * Returns the percent of file that is currently uploaded
+	 * 
 	 * @return the mPercentage
 	 */
 	public float getPercentage() {
@@ -172,6 +231,8 @@ public class FTP {
 	}
 
 	/**
+	 * Returns the file that is being uploaded
+	 * 
 	 * @return the mFile
 	 */
 	public File getFile() {
@@ -179,6 +240,8 @@ public class FTP {
 	}
 
 	/**
+	 * Returns the file path of the file that is being uploaded
+	 * 
 	 * @return the mFilePath
 	 */
 	public String getFilePath() {
@@ -186,6 +249,8 @@ public class FTP {
 	}
 
 	/**
+	 * Returns the time that is elapsed during upload
+	 * 
 	 * @return the mElapsedTime
 	 */
 	public double getElapsedTime() {
@@ -193,6 +258,8 @@ public class FTP {
 	}
 
 	/**
+	 * Returns the current transfer rate of a file
+	 * 
 	 * @return the mTransferRate
 	 */
 	public double getTransferRate() {

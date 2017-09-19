@@ -12,13 +12,18 @@ import com.centili.ftp.datatransfer.DataTransfer;
 import com.centili.ftp.models.FTP;
 
 /**
+ * Main class for FTP file upload
+ * 
  * @author antic
  *
  */
 public class AppCore {
 
 	/**
-	 * @param args
+	 * Parses the command line arguments and starts the parallel file upload up
+	 * to 5 files at a time to the server
+	 * 
+	 * @param args command line arguments
 	 */
 	public static void main(String[] args) {
 
@@ -44,7 +49,8 @@ public class AppCore {
 				break;
 			case "-files":
 				i++;
-				files = args[i];
+				if(i < args.length)
+					files = args[i];
 				break;
 			}
 		}
@@ -55,29 +61,38 @@ public class AppCore {
 			password = "pass";
 		if (server == null)
 			server = "127.0.0.1";
+		if (files == null){
+			System.err.println("No files to upload");
+			System.exit(1);
+		}
 
 		String[] paths = files.split(";");
-		if(paths.length > 5){
+		if (paths.length > 5) {
 			System.out.println("Cant upload more than 5 files simoultaneously.");
 			System.exit(1);
 		}
 		ArrayList<FTP> connections = new ArrayList<>();
-		System.out.println("\nList of files to transfer: ");
-		System.out.println("--------------------------------------");
+		int counter = 1;
 		try {
-			int counter = 1;
 			ExecutorService executorService = Executors.newFixedThreadPool(paths.length);
 			for (String path : paths) {
 				FTP protocol = new FTP(username, password, server, path);
 				connections.add(protocol);
 				protocol.connect();
 				protocol.login();
-				System.out.println(counter + ". " + protocol.getFile().getName() + " "
-						+ protocol.getFile().length() / 1024 + " Kb");
-				counter++;
 				DataTransfer trans = new DataTransfer(protocol);
 				executorService.execute(trans);
 			}
+
+			System.out.println("\nList of files to transfer: ");
+			System.out.println("--------------------------------------");
+			
+			for (FTP protocol : connections) {
+				System.out.println(counter + ". " + protocol.getFile().getName() + " "
+						+ protocol.getFile().length() / 1024 + " Kb");
+				counter++;
+			}
+			
 			System.out.println("--------------------------------------");
 			System.out.println("Live upload stats:");
 
@@ -108,7 +123,7 @@ public class AppCore {
 
 			for (FTP ftp : connections) {
 				totalTimeOfUpload += ftp.getElapsedTime();
-				averageTransferRate += ftp.getFile().length()/1024;
+				averageTransferRate += ftp.getFile().length() / 1024;
 			}
 
 			totalTimeOfUpload /= 1000;
